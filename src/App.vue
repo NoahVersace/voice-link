@@ -20,6 +20,10 @@ body {
   background: #121212;
 }
 
+#app .v-application--wrap {
+  min-height: -webkit-fill-available;
+}
+
 .mvp-banner {
   position: fixed;
   opacity: 0.7;
