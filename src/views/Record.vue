@@ -21,6 +21,7 @@
             filled
             rounded
             dense
+            readonly
             v-model="link"
             append-icon="mdi-content-copy"
             @click="copyLink"
