@@ -14,7 +14,9 @@
           <v-icon v-if="isPlaying">mdi-stop</v-icon>
         </v-btn>
         <div class="duration text-center my-5">{{ duration }}s</div>
-        <v-btn large v-if="!link" @click="uploadAudio">Get Link</v-btn>
+        <v-btn large v-if="!link" @click="uploadAudio" :loading="isLoading"
+          >Upload</v-btn
+        >
         <div v-if="link" class="link-container">
           <v-text-field
             hide-details
@@ -56,7 +58,8 @@ button {
 
 <script lang="ts">
 import getBlobDuration from "get-blob-duration";
-import { db } from "../db";
+import { db, storage } from "../db";
+
 import firebase from "firebase/app";
 import Component from "vue-class-component";
 import Vue from "vue";
@@ -71,6 +74,7 @@ export default class Record extends Vue {
   isRecording = false;
   finishedRecording = false;
   isPlaying = false;
+  isLoading = false;
   duration: number;
   link = "";
   showCopied = false;
@@ -135,14 +139,17 @@ export default class Record extends Vue {
   }
 
   async uploadAudio() {
+    this.isLoading = true;
     const arrayBuffer = await new Response(this.audioBlob).arrayBuffer();
-    const firebaseBlob = FirebaseBlob.fromUint8Array(
-      new Uint8Array(arrayBuffer)
-    );
+    const storageId = this.uuidv4();
+    console.log(storageId);
+    const blobRef = storage.ref().child(storageId);
+
+    await blobRef.put(this.audioBlob);
 
     const response = await db.collection("audios").add({
       type: this.audioBlob.type,
-      blob: firebaseBlob,
+      storageId: storageId,
       date: new Date(),
       duration: this.duration,
     });
@@ -150,11 +157,21 @@ export default class Record extends Vue {
     const id = response.id;
     this.link = window.location.origin + "/listen/" + id;
     this.copyLink();
+    this.isLoading = false;
   }
 
   copyLink() {
     navigator.clipboard.writeText(this.link).then(() => {
       this.showCopied = true;
+    });
+  }
+
+  // https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid
+  uuidv4() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      var r = (Math.random() * 16) | 0,
+        v = c == "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
     });
   }
 }

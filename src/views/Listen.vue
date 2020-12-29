@@ -4,7 +4,7 @@
     <div class="">{{ id }}</div>
     <div class="">{{ formattedDate }}</div>
     <div class="text-center mt-10">{{ duration }}s</div>
-    <v-btn light @click="playAudio" large class="mt-5">
+    <v-btn light @click="playAudio" large class="mt-5" :loading="isLoading">
       <v-icon v-if="!isPlaying">mdi-play</v-icon>
       <v-icon v-if="isPlaying">mdi-stop</v-icon>
     </v-btn>
@@ -22,20 +22,22 @@ button {
 </style>
 
 <script lang="ts">
-import { db } from "@/db";
+import { db, storage } from "@/db";
 import firebase from "firebase/app";
 import Component from "vue-class-component";
 import moment from "moment";
 import Vue from "vue";
 type FirebaseBlob = firebase.firestore.Blob;
 type FirebaseTimestamp = firebase.firestore.Timestamp;
+
 @Component
 export default class Listen extends Vue {
   id = this.$route.params.id;
-  duration = "";
+  duration = "0";
   date: Date;
   audio = new Audio();
   isPlaying = false;
+  isLoading = false;
 
   get formattedDate() {
     return moment(this.date).format("DD.MM.yyyy");
@@ -45,7 +47,8 @@ export default class Listen extends Vue {
     this.getAudio();
   }
 
-  getAudio() {
+  async getAudio() {
+    this.isLoading = true;
     db.collection("audios")
       .doc(this.id)
       .get()
@@ -53,21 +56,37 @@ export default class Listen extends Vue {
         const data = response.data() as {
           duration: string;
           date: FirebaseTimestamp;
-          blob: FirebaseBlob;
+          storageId: string;
           type: string;
         };
-        const blob = new Blob([(data.blob as any).toUint8Array()], {
-          type: data.type,
-        });
-        const reader = new FileReader();
-        const audioUrl = window.URL.createObjectURL(blob);
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-          const base64 = reader.result;
-        };
-        this.audio.src = audioUrl;
-        this.duration = data.duration;
-        this.date = data.date.toDate();
+        let blob: Blob;
+        // const blob = await storage.ref(data.storageId).getDownloadURL;
+        storage
+          .ref(data.storageId)
+          .getDownloadURL()
+          .then((url) => {
+            // This can be downloaded directly:
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = "blob";
+            xhr.onload = (event) => {
+              blob = xhr.response;
+              const reader = new FileReader();
+              const audioUrl = window.URL.createObjectURL(blob);
+              reader.readAsDataURL(blob);
+              this.audio.src = audioUrl;
+              this.duration = data.duration;
+              this.date = data.date.toDate();
+            };
+            xhr.open("GET", url);
+            xhr.send();
+          })
+          .catch(function(error) {
+            // Handle any errors
+            console.error(error);
+          })
+          .finally(() => {
+            this.isLoading = false;
+          });
       });
   }
 
