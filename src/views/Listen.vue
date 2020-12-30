@@ -50,13 +50,17 @@ export default class Listen extends mixins(AudioPlayer) {
   }
 
   get description() {
+    const on = moment(this.date).format("DD.MM.yyyy");
+    const at = moment(this.date).format("hh:mm");
     return (
       "Listen to " +
       this.id +
-      " (" +
+      "(" +
       this.duration +
       "s) recorded on " +
-      this.formattedDate
+      on +
+      " at " +
+      at
     );
   }
 
