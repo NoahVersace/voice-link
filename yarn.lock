@@ -8705,6 +8705,13 @@
     "vue-hot-reload-api" "^2.3.0"
     "vue-style-loader" "^4.1.0"
 
+"vue-meta@^2.4.0":
+  "integrity" "sha512-XEeZUmlVeODclAjCNpWDnjgw+t3WA6gdzs6ENoIAgwO1J1d5p1tezDhtteLUFwcaQaTtayRrsx7GL6oXp/m2Jw=="
+  "resolved" "https://registry.npmjs.org/vue-meta/-/vue-meta-2.4.0.tgz"
+  "version" "2.4.0"
+  dependencies:
+    "deepmerge" "^4.2.2"
+
 "vue-property-decorator@^8.4.2":
   "integrity" "sha1-VxqRz40rUH9TfXm/gnWvMYRXL/8="
   "resolved" "https://registry.npm.taobao.org/vue-property-decorator/download/vue-property-decorator-8.5.1.tgz"

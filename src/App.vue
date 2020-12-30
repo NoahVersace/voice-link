@@ -37,3 +37,10 @@ body {
   text-align: center;
 }
 </style>
+
+<script lang="ts">
+import Vue from "vue";
+export default Vue.extend({
+  metaInfo: { title: "Voice Link", titleTemplate: "%s - Voice Link" },
+});
+</script>

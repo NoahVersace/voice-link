@@ -1,10 +1,12 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
+import VueMeta from "vue-meta";
 import Home from "./views/Home.vue";
 import Record from "./views/Record.vue";
 import Listen from "./views/Listen.vue";
 
 Vue.use(VueRouter);
+Vue.use(VueMeta);
 
 const routes: Array<RouteConfig> = [
   {

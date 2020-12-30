@@ -4,7 +4,7 @@
     <div class="">{{ id }}</div>
     <div class="">{{ formattedDate }}</div>
     <div class="text-center mt-10">{{ duration }}s</div>
-    <v-btn light @click="playAudio" large class="mt-5" :loading="isLoading">
+    <v-btn light @click="toggleAudio" large class="mt-5" :loading="isLoading">
       <v-icon v-if="!isPlaying">mdi-play</v-icon>
       <v-icon v-if="isPlaying">mdi-stop</v-icon>
     </v-btn>
@@ -24,23 +24,40 @@ button {
 <script lang="ts">
 import { db, storage } from "@/db";
 import firebase from "firebase/app";
-import Component from "vue-class-component";
+import Component, { mixins } from "vue-class-component";
 import moment from "moment";
 import Vue from "vue";
+import AudioPlayer from "../components/AudioPlayer";
 type FirebaseBlob = firebase.firestore.Blob;
 type FirebaseTimestamp = firebase.firestore.Timestamp;
 
-@Component
-export default class Listen extends Vue {
+@Component({
+  metaInfo(this: Listen) {
+    return {
+      title: "Listen " + (this.isPlaying ? "🔊" : "🔈"),
+      meta: [{ name: "description", content: this.description }],
+    };
+  },
+})
+export default class Listen extends mixins(AudioPlayer) {
   id = this.$route.params.id;
   duration = "0";
   date: Date;
-  audio = new Audio();
-  isPlaying = false;
   isLoading = false;
 
   get formattedDate() {
-    return moment(this.date).format("DD.MM.yyyy");
+    return moment(this.date).format("hh:mm - DD.MM.yyyy");
+  }
+
+  get description() {
+    return (
+      "Listen to " +
+      this.id +
+      " (" +
+      this.duration +
+      "s) recorded on " +
+      this.formattedDate
+    );
   }
 
   mounted() {
@@ -73,7 +90,7 @@ export default class Listen extends Vue {
               const reader = new FileReader();
               const audioUrl = window.URL.createObjectURL(blob);
               reader.readAsDataURL(blob);
-              this.audio.src = audioUrl;
+              this.audioPlayer.src = audioUrl;
               this.duration = data.duration;
               this.date = data.date.toDate();
             };
@@ -88,12 +105,6 @@ export default class Listen extends Vue {
             this.isLoading = false;
           });
       });
-  }
-
-  playAudio() {
-    this.isPlaying = true;
-    this.audio.play();
-    this.audio.onended = () => (this.isPlaying = false);
   }
 }
 </script>

@@ -15,3 +15,10 @@
   width: 300px;
 }
 </style>
+
+<script lang="ts">
+import Vue from "vue";
+export default Vue.extend({
+  metaInfo: { title: "Voice Link 🏠", titleTemplate: "" },
+});
+</script>

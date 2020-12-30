@@ -9,7 +9,7 @@
     </v-btn>
     <div class="d-flex flex-column align-items-center">
       <template v-if="finishedRecording">
-        <v-btn large @click="playAudio" class="mt-5">
+        <v-btn large @click="toggleAudio" class="mt-5">
           <v-icon v-if="!isPlaying">mdi-play</v-icon>
           <v-icon v-if="isPlaying">mdi-stop</v-icon>
         </v-btn>
@@ -26,6 +26,7 @@
             readonly
             v-model="link"
             append-icon="mdi-content-copy"
+            class="rounded-lg"
             @click="copyLink"
             @click:append="copyLink"
           >
@@ -61,19 +62,20 @@ import getBlobDuration from "get-blob-duration";
 import { db, storage } from "../db";
 
 import firebase from "firebase/app";
-import Component from "vue-class-component";
+import Component, { mixins } from "vue-class-component";
 import Vue from "vue";
 import Recorder from "recorder-js";
+import AudioPlayer from "@/components/AudioPlayer";
 const FirebaseBlob = firebase.firestore.Blob;
 
-@Component
-export default class Record extends Vue {
+@Component({
+  metaInfo: { title: "Record" },
+})
+export default class Record extends mixins(AudioPlayer) {
   recorder: Recorder;
   audioBlob: Blob;
-  audioPlayer = new Audio();
   isRecording = false;
   finishedRecording = false;
-  isPlaying = false;
   isLoading = false;
   duration: number;
   link = "";
@@ -85,7 +87,6 @@ export default class Record extends Vue {
 
   setupRecording() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      console.log("getUserMedia supported.");
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
@@ -132,17 +133,10 @@ export default class Record extends Vue {
     this.isRecording = false;
   }
 
-  playAudio() {
-    this.isPlaying = true;
-    this.audioPlayer.play();
-    this.audioPlayer.onended = () => (this.isPlaying = false);
-  }
-
   async uploadAudio() {
     this.isLoading = true;
     const arrayBuffer = await new Response(this.audioBlob).arrayBuffer();
     const storageId = this.uuidv4();
-    console.log(storageId);
     const blobRef = storage.ref().child(storageId);
 
     await blobRef.put(this.audioBlob);
